@@ -9,19 +9,9 @@ import java.util.List;
  */
 class TrackingSystem {
     private static List<Camera> cameraList = new ArrayList<Camera>();
-//    private static Map<DoubleKey, List<VisitedPoint>> accumulator = new HashMap<DoubleKey, List<VisitedPoint>>();
-//    private static List<VisitedPoint> loadedPoints = new ArrayList<VisitedPoint>();
 
     private static ArrayList<RobotTrajectory> trajectoriesList = new ArrayList<RobotTrajectory>();
     private static ArrayList<InOutVector> inOutVectorsList = new ArrayList<InOutVector>();
-
-    private static double angleSampleRate = 1;
-    private static double radiusSampleRate = 1;
-    private static double accuracy = radiusSampleRate / 4;
-
-    private static final int coreSize = 5;    // WARNING! MUST BE ODD
-    private static final int centerSuperiority = 200; // measured in percent.
-    private static final int minimalPointsCount = 10;
 
 
     public static void linkTrajectories(){
@@ -51,8 +41,6 @@ class TrackingSystem {
                 }
             }
         }
-//        double azimuthAccuracy = 5,        //degrees
-//                normalAccuracy = 50;        //pixels
         System.out.println("Detected " + inVectors.size() + " inVectors and " + outVectors.size() + " outVectors");
 
         for (RobotTrajectory robotTrajectory:trajectoriesList){
@@ -63,11 +51,6 @@ class TrackingSystem {
                 prev.getOutVector().getNext().add(robotTrajectory.getInVector());
             }
         }
-//            for(RobotTrajectory connectedTrajectory:robotTrajectory.getConnectedTrajectories()){
-//                robotTrajectory.getInVector().getPrev().add(connectedTrajectory.getOutVector());
-//                robotTrajectory.getOutVector().getNext().add(connectedTrajectory.getInVector());
-//            }
-//        }
 
 
         for(InOutVector outVector:outVectors){
@@ -84,7 +67,6 @@ class TrackingSystem {
                 }
             }
         }
-//        createTrajectoriesList();
         int i = 0;
         System.out.println(getTrajectoriesList().size() + " trajectories founded");
         for(RobotTrajectory rt:getTrajectoriesList()){
@@ -101,14 +83,14 @@ class TrackingSystem {
 
     public static void findConnections(RobotTrajectory robotTrajectory){
         HashMap<RobotTrajectory,Integer> d = new HashMap<RobotTrajectory, Integer>();
-        HashMap<RobotTrajectory,RobotTrajectory> p = new HashMap<RobotTrajectory, RobotTrajectory>();
+//        HashMap<RobotTrajectory,RobotTrajectory> p = new HashMap<RobotTrajectory, RobotTrajectory>();
         ArrayList<RobotTrajectory> U = new ArrayList<RobotTrajectory>();
         for(RobotTrajectory rt:trajectoriesList){
             d.put(rt, Integer.MAX_VALUE);
-            p.put(rt, null);
+//            p.put(rt, null);
         }
         d.put(robotTrajectory, 0);
-        p.put(robotTrajectory, robotTrajectory);
+//        p.put(robotTrajectory, robotTrajectory);
         while(U.size() != trajectoriesList.size()){
             int min = Integer.MAX_VALUE;
             RobotTrajectory v = new RobotTrajectory();
@@ -123,7 +105,7 @@ class TrackingSystem {
                 if(U.indexOf(u) == - 1){
                     if (d.get(u) > d.get(v) + 1){
                         d.put(u, d.get(v) + 1);
-                        p.put(u, v);
+//                        p.put(u, v);
                     }
                 }
             }
@@ -135,59 +117,6 @@ class TrackingSystem {
         }
 
     }
-
-//
-//    public static Map<DoubleKey, List<VisitedPoint>> calculateLines(HashSet<VisitedPoint> pointsList, double startR, double endR){
-//        Map<DoubleKey, List<VisitedPoint>> acc = new HashMap<DoubleKey, List<VisitedPoint>>();
-//        for(double i = 0; i < 180; i += angleSampleRate){
-//            for(double j = startR; j < endR; j += radiusSampleRate){
-//                DoubleKey dkey = new DoubleKey(i, j);
-//                acc.put(dkey, null);
-//                List<VisitedPoint> points = new ArrayList<VisitedPoint>();
-//                StraightLine line = new StraightLine(i, j, StraightLine.POLAR);
-//                for(VisitedPoint point: pointsList){
-//                    if (line.isContains(point.getX(), point.getY(), accuracy))
-//                        points.add(new VisitedPoint(point));
-//                }
-//                acc.put(dkey, points);
-//            }
-//        }
-//        return acc;
-//    }
-//
-//
-//    public static List<StraightLine> findLocalMaximums(Map<DoubleKey, List<VisitedPoint>> acc, double startR, double endR){
-//        List<StraightLine> lines = new ArrayList<StraightLine>();
-//
-//       for (double i = 0; i < 180 - coreSize * angleSampleRate; i += angleSampleRate) {
-//            for (double j = startR; j < endR - coreSize * radiusSampleRate; j += radiusSampleRate) {
-//                double mean = 0;
-//                try {
-//                    for(double p = 0; p < coreSize; p++){
-//                        for (double q = 0; q < coreSize; q++){
-//                            mean += acc.get(new DoubleKey(i + p * angleSampleRate, j + q * radiusSampleRate)).size();
-//                        }
-//                    }
-//                    mean /= (coreSize*coreSize) ;
-//                    int center = coreSize / 2;
-//                    if (mean * (1 + (double)centerSuperiority / 100) < acc.get(
-//                            new DoubleKey(i + center * angleSampleRate, j + center * radiusSampleRate)).size() &&
-//                            acc.get(new DoubleKey(i + center * angleSampleRate,
-//                                    j + center * radiusSampleRate)).size() > minimalPointsCount){
-//                        lines.add(new StraightLine(i + center * angleSampleRate, j + center * radiusSampleRate, StraightLine.POLAR));
-//                        log("Line at " + i + " " + j + " with mean " + mean + " center " + acc.get(
-//                                new DoubleKey(i + center * angleSampleRate, j + center * radiusSampleRate)).size());
-//                    }
-//                }
-//                catch(NullPointerException ex){
-//                    log("error at " + i + " "  + j);
-//                }
-//            }
-//        }
-//
-//        return lines;
-//    }
-
 
     public static ArrayList<RobotTrajectory> getTrajectoriesList() {
         return trajectoriesList;

@@ -3,6 +3,7 @@ package ru.mcst.RobotGroup.PathsFinding;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 
 class Robot implements Cloneable {
@@ -24,7 +25,8 @@ class Robot implements Cloneable {
 	private double cachedX;
 	private double cachedY;
 	private  double cachedSpeed;
-	private boolean consistentCachedSpeedCoordinates=true;
+	//private boolean consistentCachedSpeedCoordinates=true;
+	private Semaphore semCachedSpeedCoordinates=new Semaphore(1);
 	//private boolean consistentSpeedCoordinates=true;
 	// ������������ �������� ������
 	private int maxSpeed;
@@ -216,6 +218,7 @@ class Robot implements Cloneable {
                 map.removeNode(finish);
                 map.removeNode(toDelete);
 				robotBlocking=null;
+				cacheSpeedCoordinates();
             	return time;
             }
             if(!mapChangedSignal)	{ //���� ������������ �� �� �� ��������� ����� (��������, �� ��� ������ ����)
@@ -251,6 +254,7 @@ class Robot implements Cloneable {
 				map.removeNode(start);
                 map.removeNode(finish);
                 map.removeNode(toDelete);
+				cacheSpeedCoordinates();
             	return time;
             }
                         
@@ -405,8 +409,8 @@ class Robot implements Cloneable {
 				}
 				cacheSpeedCoordinates();
 				try {    		            
-					//Thread.sleep(1);
-					Thread.sleep(sleepTime-(System.currentTimeMillis()-startedTime));
+//					Thread.sleep(1);
+					Thread.sleep((sleepTime-(System.currentTimeMillis()-startedTime ))< 0 ? 0 : (sleepTime-(System.currentTimeMillis()-startedTime)));
 					startedTime=System.currentTimeMillis();
 					updateTime=System.currentTimeMillis();
 				} catch(InterruptedException ex) {
@@ -643,42 +647,68 @@ class Robot implements Cloneable {
 			return null;
 	}
 	// blocking operation!
-	public void setConsistentCachedSpeedCoordinates(boolean consistentCachedSpeedCoordinates) {
-		if(consistentCachedSpeedCoordinates==false)
-			while (!consistentCachedSpeedCoordinates){}
-		this.consistentCachedSpeedCoordinates = consistentCachedSpeedCoordinates;
-	}
+//	public void setConsistentCachedSpeedCoordinates(boolean consistentCachedSpeedCoordinates) {
+//		if(consistentCachedSpeedCoordinates==false)
+//			while (!consistentCachedSpeedCoordinates){}
+//		this.consistentCachedSpeedCoordinates = consistentCachedSpeedCoordinates;
+//	}
 	// blocking operation!
 	private void cacheSpeedCoordinates() {
-		while(!consistentCachedSpeedCoordinates){}
-		consistentCachedSpeedCoordinates=false;
-		cachedX=x;
-		cachedY=y;
-		cachedSpeed=speed;
-		consistentCachedSpeedCoordinates=true;
+//		while(!consistentCachedSpeedCoordinates){}
+//		consistentCachedSpeedCoordinates=false;
+		try {
+			semCachedSpeedCoordinates.acquire();
+			cachedX=x;
+			cachedY=y;
+			cachedSpeed=speed;
+			//consistentCachedSpeedCoordinates=true;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		semCachedSpeedCoordinates.release();
 	}
 	// blocking operation!
-	public double getCachedX() {
-		while (!consistentCachedSpeedCoordinates){}
-		return cachedX;
-	}
-	// blocking operation!
-	public double getCachedY() {
-		while (!consistentCachedSpeedCoordinates){}
-		return cachedY;
-	}
+//	public double getCachedX() {
+//		while (!consistentCachedSpeedCoordinates){}
+//		return cachedX;
+//	}
+//	// blocking operation!
+//	public double getCachedY() {
+//		while (!consistentCachedSpeedCoordinates){}
+//		return cachedY;
+//	}
 	// blocking operation!
 	public double getCachedSpeed() {
-		while (!consistentCachedSpeedCoordinates){}
-		return cachedSpeed;
+		//while (!consistentCachedSpeedCoordinates){}
+		double result=-1;
+		try {
+			semCachedSpeedCoordinates.acquire();
+			result=cachedSpeed;
+			semCachedSpeedCoordinates.release();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		//return cachedSpeed;
+		return result;
 	}
+
+	private String status = "";
 	public double[] getCachedCoordinates() {
-		while (!consistentCachedSpeedCoordinates) {}
-		consistentCachedSpeedCoordinates=false;
+//		status = "before";
+//		while (!consistentCachedSpeedCoordinates) {}
+//		status = "after";
+//		consistentCachedSpeedCoordinates=false;
 		double[] result=new double[2];
-		result[0]=x;
-		result[1]=y;
-		consistentCachedSpeedCoordinates=true;
+		try {
+			semCachedSpeedCoordinates.acquire();
+			result[0]=x;
+			result[1]=y;
+			//consistentCachedSpeedCoordinates=true;
+			semCachedSpeedCoordinates.release();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		return result;
 	}
 

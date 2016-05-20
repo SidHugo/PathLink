@@ -32,6 +32,7 @@ public class GUI extends JFrame{
     private JRadioButton moveCameraRadioButton;
     private JLabel cameraXLabel;
     private JLabel cameraYLabel;
+    private JLabel statusLabel;
     private static MapUnderlay mapPanel;
 
     private static Camera currentCamera;
@@ -39,6 +40,7 @@ public class GUI extends JFrame{
 
     public GUI(){
         super();
+        long startUITime = System.currentTimeMillis();
         currentCamera   = null;
         createMyComponents();
         startMapListenerDaemon();
@@ -47,6 +49,7 @@ public class GUI extends JFrame{
         pack();
         setSize(1001, 720);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        System.out.println("UI load time: " + (System.currentTimeMillis() - startUITime));
     }
 
     private void startMapListenerDaemon(){
@@ -152,6 +155,9 @@ public class GUI extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 TrackingSystem.removeCamera(currentCamera);
+                for(int i = 0; i < TrackingSystem.getCameraList().size(); i++){
+                    TrackingSystem.getCameraList().get(i).setIndex(i);
+                }
                 currentCamera.setExist(false);
 
                 currentCamera = null;
@@ -176,8 +182,11 @@ public class GUI extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 for(Camera camera:TrackingSystem.getCameraList()){
-                    camera.getTracker().clear();
+//                    camera.getTracker().clear();
+                    camera.getTracker().setMarkForClear(true);
                 }
+                setCurrentVector(null);
+                mapPanel.setCurrentVector(null);
                 TrackingSystem.getTrajectoriesList().clear();
                 TrackingSystem.getInOutVectorsList().clear();
                 mapPanel.clearTrajectoriesLayer();
@@ -188,71 +197,47 @@ public class GUI extends JFrame{
         linkTrajectoriesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                long startTime = System.currentTimeMillis();
                 TrackingSystem.linkTrajectories();
-//                ArrayList<RobotTrajectory> toDrawList = new ArrayList<RobotTrajectory>(TrackingSystem.getTrajectoriesList());
-//                while (!toDrawList.isEmpty()){
-//                    RobotTrajectory rt = toDrawList.get(0);
-//                    if (rt.getInVector() != null)
-//                        mapPanel.fillCircle((int)rt.getInVector().getStartPoint().getX(), (int)rt.getInVector().getStartPoint().getY(), rt.getConnectionsColor());
-//                    if(rt.getOutVector() != null)
-//                        mapPanel.fillCircle((int)rt.getOutVector().getStartPoint().getX(), (int)rt.getOutVector().getStartPoint().getY(), rt.getConnectionsColor());
-//                    for(RobotTrajectory connectedRT:rt.getConnectedTrajectories()){
-//                        if (connectedRT.getInVector() != null)
-//                            mapPanel.fillCircle((int)connectedRT.getInVector().getStartPoint().getX(), (int)connectedRT.getInVector().getStartPoint().getY(), rt.getConnectionsColor());
-//                        if(connectedRT.getOutVector() != null)
-//                            mapPanel.fillCircle((int)connectedRT.getOutVector().getStartPoint().getX(), (int)connectedRT.getOutVector().getStartPoint().getY(), rt.getConnectionsColor());
-//                        if (toDrawList.indexOf(connectedRT) >= 0)
-//                            toDrawList.remove(connectedRT);
-//                    }
-//                    if (toDrawList.indexOf(rt) >= 0)
-//                        toDrawList.remove(rt);
-//                }
+                System.out.println("Trajectories link time(ms): " + (System.currentTimeMillis() - startTime));
             }
         });
-
-        System.out.print("ui");
     }
 
-    /*public void drawLine(StraightLine line){
-        double a = line.getA();
-        double r = line.getR();
 
-        Point2D point1 = new Point2D.Double(0, r / Math.sin(Math.toRadians(a))),
-                point2 = new Point2D.Double(r / Math.cos(Math.toRadians(a)), 0),
-                point3 = new Point2D.Double(mapPanel.getWidth(), (r - mapPanel.getWidth() *
-                        Math.cos(Math.toRadians(a))) / Math.sin(Math.toRadians(a))),
-                point4 = new Point2D.Double((r - mapPanel.getHeight() * Math.sin(Math.toRadians(a))) /
-                        Math.cos(Math.toRadians(a)), mapPanel.getHeight());
-        Point2D firstPoint = null, secondPoint = null;
-        if(point1.getY() >= 0) firstPoint = point1;
-        else firstPoint = point2;
-        if(point4.getX() >= 0 && point4.getY() >= 0) secondPoint = point4;
-        if(point3.getX() >= 0 && point3.getY() >= 0) secondPoint = point3;
-        if(point2.getX() >= 0 && point2.getY() >= 0) secondPoint = point2;
-        BufferedImage lineImage = new BufferedImage(mapPanel.getWidth(), mapPanel.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = lineImage.createGraphics();
-        g2d.setComposite(AlphaComposite.Clear);
-        g2d.fillRect(0, 0, lineImage.getWidth(), lineImage.getHeight());
-        g2d.setComposite(AlphaComposite.Src);
-        g2d.setColor(Color.RED);
-        g2d.drawLine((int) firstPoint.getX(), (int) firstPoint.getY(), (int) secondPoint.getX(), (int) secondPoint.getY());
-        g2d.dispose();
-        JLabel lineLabel = new JLabel(new ImageIcon(lineImage));
-        mapPanel.add(lineLabel);
-        Insets insets = mapPanel.getInsets();
-        Dimension size = lineLabel.getPreferredSize();
-        lineLabel.setBounds(insets.left, insets.top, size.width, size.height);
-    }*/
 
-    public static void inOutVectorNotification(InOutVector vector){
+    public void updateStatus(){
+        String status = "<html>";
+        for(Camera curCamera:TrackingSystem.getCameraList()){
+            status += "Camera " + TrackingSystem.getCameraList().indexOf(curCamera) + " see " + curCamera.getTracker().getVisibleRobotsCount() +
+                    " robots<br>";
+        }
+        status += "</html>";
+        statusLabel.setText(status);
+    }
+
+    public void inOutVectorNotification(InOutVector vector){
         String message = (vector.getOrientation() == InOutVector.IN ? "In " : "Out ") +
 
-                "vector." + System.lineSeparator() + "x: " + vector.getX() + System.lineSeparator() +
-                "y: " + vector.getY() + System.lineSeparator() + "azimuth: " + vector.getAzimuth() +
-                System.lineSeparator() + "speed: " + vector.getSpeed() + System.lineSeparator() +
-                "acceleration: " + vector.getAcceleration() + System.lineSeparator() +
-                "time: " + vector.getTime();
-        JOptionPane.showMessageDialog(mapPanel, message);
+                "vector: " + TrackingSystem.getInOutVectorsList().indexOf(vector) + System.lineSeparator() +
+                "x: " + vector.getX() + System.lineSeparator() +
+                "y: " + vector.getY() + System.lineSeparator() +
+                "azimuth: " + vector.getAzimuth() + System.lineSeparator() +
+                "speed: " + vector.getSpeed() + System.lineSeparator() +
+                "acceleration: " + vector.getAcceleration() + System.lineSeparator()  +
+                "start time: " + vector.startTime + System.lineSeparator() +
+                "end time: " + vector.endTime + System.lineSeparator() +
+                "delta time: " + (vector.endTime - vector.startTime) + System.lineSeparator() +
+                "connections: " + (vector.getOrientation() == InOutVector.IN ? vector.getPrev().size() : vector.getNext().size());
+//        if(vector.getOrientation() == InOutVector.OUT)
+//            for(InOutVector inOutVector:TrackingSystem.getInOutVectorsList()){
+//                if (inOutVector.getOrientation() == InOutVector.IN){
+//                    System.out.println("vector " + TrackingSystem.getInOutVectorsList().indexOf(inOutVector));
+//                    vector.isPotentialFollowerTo(inOutVector);
+//                }
+//            }
+//        JOptionPane.showMessageDialog(mapPanel, message);
+        System.out.println(message);
     }
 
     public void setCurrentCamera(Camera camera) {
@@ -273,6 +258,37 @@ public class GUI extends JFrame{
         cameraRTextField.setText("Camera radius: " + cameraRSlider.getValue());
 
     }
+
+    /*public void drawLine(StraightLine line){
+        double a = line.getA();
+        double r = line.getR();
+
+        Point2D point1 = new Point2D.Double(0, r / Math.sin(Math.toRadians(a))),
+                point2 = new Point2D.Double(r / Math.cos(Math.toRadians(a)), 0),
+                point3 = new Point2D.Double(mapPanel.getWidth(), (r - mapPanel.getWidth() *
+                        Math.cos(Math.toRadians(a))) / Math.sin(Math.toRadians(a))),
+                point4 = new Point2D.Double((r - mapPanel.getHeight() * Math.sin(Math.toRadians(a))) /
+                        Math.cos(Math.toRadians(a)), mapPanel.getHeight());
+        Point2D firstPoint = null, secondPoint = null;
+        if(point1.getY() >= 0) firstPoint = point1;
+        else firstPoint = point2;
+        secondPoint = point4;
+        if(point3.getX() >= 0 && point3.getY() >= 0) secondPoint = point3;
+        if(point2.getX() >= 0 && point2.getY() >= 0) secondPoint = point2;
+        BufferedImage lineImage = new BufferedImage(mapPanel.getWidth(), mapPanel.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = lineImage.createGraphics();
+        g2d.setComposite(AlphaComposite.Clear);
+        g2d.fillRect(0, 0, lineImage.getWidth(), lineImage.getHeight());
+        g2d.setComposite(AlphaComposite.Src);
+        g2d.setColor(Color.RED);
+        g2d.drawLine((int) firstPoint.getX(), (int) firstPoint.getY(), (int) secondPoint.getX(), (int) secondPoint.getY());
+        g2d.dispose();
+        JLabel lineLabel = new JLabel(new ImageIcon(lineImage));
+        mapPanel.add(lineLabel);
+        Insets insets = mapPanel.getInsets();
+        Dimension size = lineLabel.getPreferredSize();
+        lineLabel.setBounds(insets.left, insets.top, size.width, size.height);
+    }*/
 
     public JLabel getMouseXLabel() {
         return mouseXLabel;

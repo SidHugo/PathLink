@@ -20,6 +20,7 @@ class InOutVector {
     private long time;
     private int orientation;
     private HashSet<InOutVector> prev, next;
+    long  startTime, endTime;
 
     public InOutVector(){
         robotTrajectory = null;
@@ -62,6 +63,8 @@ class InOutVector {
         }
 //        this.speed = robotTrajectory.getSpeeds().get(startIndex);
         this.time = robotTrajectory.getTimes().get(startIndex);
+        this.startTime = robotTrajectory.getTimes().get(startIndex);
+        this.endTime = robotTrajectory.getTimes().get(endIndex);
         this.robotTrajectory = robotTrajectory;
         this.orientation = orientation;
         prev = new HashSet<InOutVector>();
@@ -84,8 +87,9 @@ class InOutVector {
     }
 
     public double getAzimuth(){
-        return ( endPoint.getX() - startPoint.getX() == 0 ) ? 90 :
-        Math.toDegrees(Math.atan((endPoint.getY() - startPoint.getY()) / (endPoint.getX() - startPoint.getX())));
+        double x = endPoint.getX() - startPoint.getX(),
+                y = endPoint.getY() - startPoint.getY();
+        return ( x == 0 ) ? 90 : (x < 0 && y > 0) ? (180 + Math.toDegrees(Math.atan(y / x))) : Math.toDegrees(Math.atan(y / x));
     }
 
     public double getNormal(){
@@ -96,10 +100,10 @@ class InOutVector {
     }
 
     public boolean isPotentialFollowerTo(InOutVector vector){
+//        long startTime = System.currentTimeMillis();
         double POSSIBLE_ANGLE = 90;
 
         double n = 15;          //rotation degrees
-//        Vec2d vector = new Vec2d(endPoint.getX() - startPoint.getX(), endPoint.getY() - startPoint.getY());
         double x = endPoint.getX() - startPoint.getX(), y = endPoint.getY() - startPoint.getY();
         
         Vec2d wayVector = new Vec2d(vector.getStartPoint().getX() - endPoint.getX(), vector.getStartPoint().getY() - endPoint.getY());
@@ -112,21 +116,23 @@ class InOutVector {
         sectorEnd = new Vec2d(sectorEnd.x * wayVectorLength / sectorEndLength, sectorEnd.y * wayVectorLength / sectorEndLength);
         double distance = Math.sqrt(Math.pow(endPoint.getX() - vector.getStartPoint().getX(), 2) +
                 Math.pow(endPoint.getY() - vector.getStartPoint().getY(), 2)),
-               possibleDistance = (this.speed + vector.speed) / 2 * ((vector.time - this.time) / 1000);
+               possibleDistance = (this.speed + vector.speed) / 2 * ((double)(vector.time - this.time) / 1000);
 //        System.out.println(distance + " " + possibleDistance);
         boolean isInReachableDistance = (distance < possibleDistance * 1.2 && distance > possibleDistance * 0.7) || (
                 distance < possibleDistance + 5 && distance > possibleDistance - 5);
         boolean isAzimuthCorrect = Math.abs(this.getAzimuth() - vector.getAzimuth()) < POSSIBLE_ANGLE;
-        return !areClockwise(sectorStart, wayVector) && areClockwise(sectorEnd, wayVector) && isInReachableDistance && isAzimuthCorrect;
+        boolean isInSector = !areClockwise(sectorStart, wayVector) && areClockwise(sectorEnd, wayVector);
+//        System.out.println(isInReachableDistance);
+//        System.out.println(isAzimuthCorrect);
+//        System.out.println(isInSector);
+//        System.out.println(distance + " " + possibleDistance);
+//        System.out.println("isPotentialFollower time(ms): " + (System.currentTimeMillis() - startTime));
+        return isInSector && isInReachableDistance && isAzimuthCorrect;
     }
 
     private boolean areClockwise(Vec2d v1, Vec2d v2){
         return -v1.x * v2.y + v1.y * v2.x <= 0;
     }
-
-//    public boolean isBehind(InOutVector vector){
-//        return (vector.getEndPoint().getX() - startPoint.getX()) / (endPoint.getX() - startPoint.getX()) > 0;
-//    }
 
     public double getX(){
         return orientation == IN ? startPoint.getX() : endPoint.getX();

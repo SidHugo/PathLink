@@ -3,7 +3,6 @@ package ru.mcst.RobotGroup.PathsLinking;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Random;
 
 
 class RobotTrajectory {
@@ -18,7 +17,6 @@ class RobotTrajectory {
     public RobotTrajectory(){
         points = new ArrayList<Point2D>();
         direction = 0;
-        generateNewColor();
         inVector = null;
         outVector = null;
         connectedTrajectories = new ArrayList<RobotTrajectory>();
@@ -34,7 +32,6 @@ class RobotTrajectory {
              this.points.add(point2D);
         }
         this.direction = robotTrajectory.getDirection();
-        generateNewColor();
         inVector = null;
         outVector = null;
         connectedTrajectories = new ArrayList<RobotTrajectory>(robotTrajectory.getConnectedTrajectories());
@@ -44,12 +41,6 @@ class RobotTrajectory {
         prev = new HashSet<RobotTrajectory>(robotTrajectory.getPrev());
     }
 
-    public void generateNewColor(){
-        Random random = new Random();
-        float r = random.nextFloat();
-        float g = random.nextFloat();
-        float b = random.nextFloat();
-    }
 
     public ArrayList<Point2D> getPoints() {
         return points;
@@ -81,10 +72,6 @@ class RobotTrajectory {
 
     public ArrayList<RobotTrajectory> getConnectedTrajectories() {
         return connectedTrajectories;
-    }
-
-    public void setConnectedTrajectories(ArrayList<RobotTrajectory> connectedTrajectories) {
-        this.connectedTrajectories = connectedTrajectories;
     }
 
     public ArrayList<Double> getSpeeds() {

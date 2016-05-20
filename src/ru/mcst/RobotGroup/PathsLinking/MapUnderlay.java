@@ -61,6 +61,7 @@ class MapUnderlay extends JPanel implements MouseListener, MouseMotionListener{
             g2d.drawImage(linksLayer, 0, 0, null);
         }
         g2d.dispose();
+        parentGUI.updateStatus();
     }
 
     private void updateLinksLayer(){
@@ -85,7 +86,6 @@ class MapUnderlay extends JPanel implements MouseListener, MouseMotionListener{
     }
 
     private void updateCamerasLayer(){
-//        System.out.println(TrackingSystem.getCameraList().size());
         Graphics2D g2d = camerasLayer.createGraphics();
         g2d.setComposite(AlphaComposite.Clear);
         g2d.fillRect(0, 0, camerasLayer.getWidth(), camerasLayer.getHeight());
@@ -132,7 +132,6 @@ class MapUnderlay extends JPanel implements MouseListener, MouseMotionListener{
     }
 
     public static void changeTrajectoriesLayer(BufferedImage trajectories) {
-//        trajectoriesLayer = trajectories;
         Graphics2D g2d = trajectoriesLayer.createGraphics();
         g2d.drawImage(trajectories, 0, 0, null);
         g2d.dispose();
@@ -160,18 +159,13 @@ class MapUnderlay extends JPanel implements MouseListener, MouseMotionListener{
         g2d.dispose();
     }
 
-    public void fillCircle(int x, int y, Color color){
-        Graphics2D g2d = linksLayer.createGraphics();
-        g2d.setColor(color);
-        g2d.fillOval(x - vectorCircleSize / 2, y - vectorCircleSize / 2, vectorCircleSize, vectorCircleSize);
-        g2d.dispose();
-        repaint();
-    }
-
     public void setSelectedTool(int selectedTool) {
         this.selectedTool = selectedTool;
     }
 
+    public void setCurrentVector(InOutVector currentVector) {
+        this.currentVector = currentVector;
+    }
 
     private void moveCamera(int x, int y) {
         currentCamera.setX(x);
@@ -183,7 +177,8 @@ class MapUnderlay extends JPanel implements MouseListener, MouseMotionListener{
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        double minDistance = 0;
+        long startTime = System.currentTimeMillis();
+        double minDistance;
         switch(selectedTool){
             case SELECT_CAMERA_TOOL:
                 Camera currentCamera = null;
@@ -197,7 +192,7 @@ class MapUnderlay extends JPanel implements MouseListener, MouseMotionListener{
                 }
 
                 if (currentCamera != null) {
-                    System.out.println("Camera " + currentCamera.getX() + " " + currentCamera.getY() + " selected");
+                    System.out.println("Camera " + currentCamera.getIndex() + " at " + currentCamera.getX() + " " + currentCamera.getY() + " selected");
                     this.currentCamera = currentCamera;
                     parentGUI.setCurrentCamera(currentCamera);
                 }
@@ -235,6 +230,7 @@ class MapUnderlay extends JPanel implements MouseListener, MouseMotionListener{
                 break;
         }
         repaint();
+        System.out.println("Click event handling(ms): " + (System.currentTimeMillis() - startTime));
     }
 
     @Override
@@ -244,7 +240,6 @@ class MapUnderlay extends JPanel implements MouseListener, MouseMotionListener{
 
     @Override
     public void mouseReleased(MouseEvent e) {
-//        System.out.println("mouse released");
 
     }
 
@@ -271,7 +266,6 @@ class MapUnderlay extends JPanel implements MouseListener, MouseMotionListener{
 
     @Override
     public void mouseMoved(MouseEvent e) {
-//        System.out.println("mouse moved");
         parentGUI.getMouseXLabel().setText("x:" + e.getX());
         parentGUI.getMouseYLabel().setText("y:" + e.getY());
         parentGUI.repaint();
