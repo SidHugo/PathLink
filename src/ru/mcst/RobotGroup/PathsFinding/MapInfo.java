@@ -11,42 +11,20 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 class MapInfo implements Cloneable {
-	// ����� ���������
 	private BufferedImage image;
-	// ����� ������������
     private BufferedImage passabilityMap;
-    // ����� ����������
     private BufferedImage realityMap;
-    // ������ ����� �����
-	//http://infotechgems.blogspot.ru/2011/11/java-collections-performance-time.html
-    //private Map<Point, List<Node>> nodes=new HashMap<Point, List<Node>>();
 	private Map<Point, List<Node>> nodes = Collections.synchronizedMap(new HashMap<Point, List<Node>>());
-    //http://www.skipy.ru/technics/synchronization.html
-    //private Map<Point, List<Node>> nodes=new Hashtable<Point, List<Node>>();
-	// ����, �� ������� ����� �����
-	// (��� �� �������� ������, ����� ��������� �� �����)
-    //private Node standing;
-
-    // ����-�����
-	//private Node finish;
-	// ������ ������ (�������)
     private int scale;
-    // ����������� "����"-"����������� ������������"
     private MapColors mapColors=new MapColors();
-	
     private byte[][] passabilityArray=null;
     private boolean isChanged=false;
-
-	//private boolean passabilityChanged=false;
-    
     private byte[][] realityArray=null;
     
     public MapInfo(){
 		image = null;
         passabilityMap=null;
         realityMap=null;
-		//standing=null;
-        //finish=null;
         scale=60;
 	}
     public MapInfo(String imageFile, int scale) throws IOException {
@@ -93,10 +71,7 @@ class MapInfo implements Cloneable {
 	public Image getImage() {return image;}
     public BufferedImage getPassabilityMap() {return passabilityMap;}
     public void setImage(BufferedImage image) {this.image=image;}
-    // �������� ����� ��������� �� �����
     public void loadImage(String filePath) throws IOException {this.image=ImageIO.read(new File(filePath));}
-    // ������� ������������
-    // ���������� ���������� ��������� �����
     public int calculatePassability(double radius){
         if(image==null)
             return 0;
@@ -112,7 +87,6 @@ class MapInfo implements Cloneable {
         {
             for(int j=scale; j<=image.getWidth(); j+=scale)
             {
-            	// ���������� ��� ����, ����� ����������� ����� ���� ���������
             	int oldPassability=100;
                 for(int x=j-scale; x<j; ++x)
                 {
@@ -158,12 +132,8 @@ class MapInfo implements Cloneable {
         }
                 
         g2.dispose();
-		//passabilityChanged=true;
         return makeNodesFromPassability(radius);
     }
-    // �������� �������� 8 �������� �� ������������
-    // ���������� ������� ����������� ������������ 8 �������� ��� 0, ���� ������� ���� �� 
-    // ���� ������������ �������
     private int checkAround(int x, int y) {
     	int average=0;
     	int curent=0;
@@ -181,8 +151,6 @@ class MapInfo implements Cloneable {
     	}
     	return average/counter;
     }
-    // ������� ���� �� ������ ����� ������������
-    // ���������� ���������� ��������� �����
     public int makeNodesFromPassability(double radius) {
         if(passabilityMap==null)
             return 0;
@@ -195,9 +163,7 @@ class MapInfo implements Cloneable {
             	int weight=255-passabilityMap.getRGB(x,y) & 0xFF;
             	if(weight!=255) {
             		List<Node> newNodes=new ArrayList<Node>();
-            		//http://www.skipy.ru/technics/synchronization.html
-            		//List<Node> newNodes=new Vector<Node>();
-            		
+
             		newNodes.add(new Node(x,y, 0));
             		newNodes.add(new Node(x,y, Math.PI/4));
             		newNodes.add(new Node(x,y, Math.PI/2));
@@ -212,71 +178,6 @@ class MapInfo implements Cloneable {
             	}            	
             }
         }
-        /*
-        class MyRunnable implements Runnable {
-        	public double radius;
-        	public MyRunnable(double radius) {
-        		this.radius=radius;
-        	}
-        	public void run() {        		
-        	}
-        }
-        
-        
-        Runnable r1=new MyRunnable(radius) {
-        	@Override
-			public void run() {
-        		List<Node> nodeList=getNodesInList();
-				//http://howtodoinjava.com/2013/03/26/performance-comparison-of-different-for-loops-in-java/				
-				for(int border=nodeList.size()/4, i=0; i<border; ++i) {
-					addLinksAroundCell24(nodeList.get(i), radius, false);
-				}
-			}
-        };
-                
-        Runnable r2=new MyRunnable(radius) {
-        	@Override
-			public void run() {
-        		List<Node> nodeList=getNodesInList();
-        		//http://howtodoinjava.com/2013/03/26/performance-comparison-of-different-for-loops-in-java/
-				for(int border=nodeList.size()/4, i=nodeList.size()/2-1; i>=border; --i) {
-					addLinksAroundCell24(nodeList.get(i), radius, false);
-				}
-			}
-		};		
-		
-		Runnable r3=new MyRunnable(radius) {
-        	@Override
-			public void run() {
-        		List<Node> nodeList=getNodesInList();
-				//http://howtodoinjava.com/2013/03/26/performance-comparison-of-different-for-loops-in-java/
-				for(int border=3*nodeList.size()/4, i=nodeList.size()/2; i<border; ++i) {
-					addLinksAroundCell24(nodeList.get(i), radius, false);
-				}
-			}
-        };
-        
-        Runnable r4=new MyRunnable(radius) {
-        	@Override
-			public void run() {
-        		List<Node> nodeList=getNodesInList();
-        		//http://howtodoinjava.com/2013/03/26/performance-comparison-of-different-for-loops-in-java/
-				for(int border=3*nodeList.size()/4, i=nodeList.size()-1; i>=border; --i) {
-					addLinksAroundCell24(nodeList.get(i), radius, false);
-				}
-			}
-		};
-		Thread t1=new Thread(r1);
-		Thread t2=new Thread(r2);
-		Thread t3=new Thread(r3);
-		Thread t4=new Thread(r4);
-		t1.start();
-		t2.start();
-		t3.start();
-		t4.start();
-		while(t1.isAlive() || t2.isAlive() || t3.isAlive() || t4.isAlive()) {
-		}
-		*/
 		class MyThread extends Thread {
 			private double radius;
 			private int first, last;
@@ -296,7 +197,6 @@ class MapInfo implements Cloneable {
 
 		try {
 			int n = Runtime.getRuntime().availableProcessors();
-			//System.out.println("availableProcessors = " + n);
 			int size = getNodesInList().size();
 			MyThread t[] = new MyThread[n];
 			for (int i = 0; i < n; i++) {
@@ -309,7 +209,6 @@ class MapInfo implements Cloneable {
 		isChanged=true;
 		return nodesCounter;
     }
-    // ��������� 24 ������� � ���� n
     public void addLinksAroundCell24(Node n, double radius, boolean doubleConnections) {
         int yBorder=(int)n.getY()+scale*2;
     	int xBorder=(int)n.getX()+scale*2;
@@ -390,27 +289,19 @@ class MapInfo implements Cloneable {
     public Map<Point, List<Node>> getNodes() {return nodes;}
     public List<Node> getNodesInList() {
     	List<Node> result=new ArrayList<Node>();
-//		Set<Map.Entry<Point, List<Node>>>  entrySet=nodes.entrySet();
     	synchronized (nodes) {
 	    	for(Map.Entry<Point, List<Node>> newNodes:nodes.entrySet()) {
-//		synchronized (entrySet) {
-//	    	for(Map.Entry<Point, List<Node>> newNodes:entrySet) {
 	    		result.addAll(newNodes.getValue());
 	    	}
     	}
     	return result;
     }
-    //public Node getStanding() {return standing;}
-    //public Node getFinish() {return finish;}
-    //public void setStanding(Node standing) {this.standing=standing;}
-    //public void setFinish (Node finish) {this.finish=finish;}
-    public void addNode(Node node) {    	
+    public void addNode(Node node) {
     	synchronized (nodes) {
 			if (nodes.containsKey(node.getPoint()))
 				nodes.get(node.getPoint()).add(node);
 			else {
 				List<Node> n = new ArrayList<Node>();
-				//http://www.skipy.ru/technics/synchronization.html
 				n.add(node);
 				nodes.put(node.getPoint(), n);
 			}
@@ -419,9 +310,7 @@ class MapInfo implements Cloneable {
     }
     public void addNodes(int x, int y, int weight) {
     	List<Node> newNodes=new ArrayList<Node>();
-    	//http://www.skipy.ru/technics/synchronization.html
-    	//List<Node> newNodes=new Vector<Node>();
-    	
+
     	for(double direction=0; direction<2*Math.PI; direction+=Math.PI/4) {
     		newNodes.add(new Node(x, y, direction));
     	}    	
@@ -467,23 +356,13 @@ class MapInfo implements Cloneable {
         	if(nodes.get(point).size()==0) {
         		nodes.remove(point);
         	}
-//        	if(n==standing)
-//        		standing=null;
-//        	if(n==finish)
-//        		finish=null;
         	isChanged=true;
             return true;
         }
         return false;
     }
     public ArrayList<Node> getNodes(int x, int y, int diameter) {
-    //http://www.skipy.ru/technics/synchronization.html
-    //public List<Node> getNodes(int x, int y, int diameter) {	
-    	//http://www.skipy.ru/technics/synchronization.html
     	ArrayList<Node> result=new ArrayList<Node>();
-    	//List<Node> result=new Vector<Node>();
-    	
-    	//http://howtodoinjava.com/2013/03/26/performance-comparison-of-different-for-loops-in-java/    	
     	if(diameter==0) {
     		Point point=new Point(x,y);
     		if(nodes.containsKey(point))
@@ -530,20 +409,17 @@ class MapInfo implements Cloneable {
     public BufferedImage getRealityMap() {return realityMap;}    
     public void setPassability(BufferedImage passability) {
 		this.passabilityMap=passability;
-		//passabilityChanged=true;
 	}
     public byte[][] getPassabilityArray() {return passabilityArray;}
     public void removePassability() {
     	passabilityMap=null;
     	passabilityArray=null;
-		//passabilityChanged=true;
     }
     public void setPassabilityPoint(int x, int y, int weight) {
     	if(x<0 || x>=passabilityMap.getWidth() ||
     	   y<0 || y>=passabilityMap.getHeight())
     		return;
     	passabilityArray[x][y]=(byte)(127-weight);
-		//passabilityChanged=true;
     }
     public int getRealityWeight(int x, int y) {
     	if(realityMap==null)
@@ -559,9 +435,7 @@ class MapInfo implements Cloneable {
     	if(x<0 || x>=passabilityMap.getWidth() ||
     	   y<0 || y>=passabilityMap.getHeight())
     	    return 255;
-    	// first option is may be right, because I use it to take old passability, while changing passability array 
     	return 255-(passabilityMap.getRGB(x, y) & 0xFF);
-    	//return 127-passabilityArray[x][y];
     }
     public Point getCellCenterPoint(int x, int y) {
     	if(passabilityMap==null)
@@ -582,39 +456,45 @@ class MapInfo implements Cloneable {
     	int average=0;
         boolean isBlack=false;
         int counter=0;
+		ArrayList<Point> blackPoints=new ArrayList<Point>();
         for (int x = xCenter - (scale / 2); x < xCenter + (scale / 2); ++x) {
             for (int y = yCenter - (scale / 2); y < yCenter + (scale / 2); ++y) {
                 int passability=passabilityArray[x][y]+128;
                 if (passability == 0) {
-                    average = 0;
+                    //average = 0;
                     isBlack = true;
-                    counter++;
-                    break;
+					counter++;
+                    //break;
+					blackPoints.add(new Point(x,y));
                 }
                 average += passability;
                 counter++;
             }
-            if (isBlack) {
-                isBlack = false;
-                break;
-            }
+//            if (isBlack) {
+//                isBlack = false;
+//                break;
+//            }
         }
         average=average/counter;
         Graphics2D g2 = passabilityMap.createGraphics();
         g2.setColor(new Color(average, average, average));
         g2.fillRect(xCenter - (scale / 2), yCenter - (scale / 2), scale, scale);
-        
+		g2.setColor(Color.black);
+        for(Point blackPoint:blackPoints)
+			g2.fillRect(blackPoint.x, blackPoint.y,1,1);
+
         for(int x=xCenter-scale/2; x<xCenter+scale/2; ++x) {
         	for(int y=yCenter-scale/2; y<yCenter+scale/2; ++y) {
         		passabilityArray[x][y]=(byte)(average-128);
         	}
         }
+		for(Point blackPoint:blackPoints)
+			passabilityArray[blackPoint.x][blackPoint.y] = 0-128;
         
         List<Node> nodesToChange=getNodes(xCenter, yCenter, 0);
-		//passabilityChanged=true;
-        if(average==0){
+        //if(average==0){
+		if(isBlack) {
             for(Node n:nodesToChange)
-            	//nodes.remove(n);
             	removeNode(n);
             return false;
         } else {
@@ -643,6 +523,4 @@ class MapInfo implements Cloneable {
     public int getWidth() {return image.getWidth();}
     public int getHeight() {return image.getHeight();}
 
-//	public void setPassabilityChanged(boolean passabilityChanged) {this.passabilityChanged=passabilityChanged;}
-//	public boolean isPassabilityChanged() {return passabilityChanged;}
 }

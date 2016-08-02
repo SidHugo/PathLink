@@ -151,7 +151,7 @@ class Surface extends JPanel implements MouseListener, MouseMotionListener, KeyL
 //		at.rotate((-1)*robot.getAzimuth(), robotImage.getWidth(null)/2, robotImage.getHeight(null)/2);
 //		g2d.drawImage(robotImage, at, null);
 
-
+		g2d.setBackground(new Color(0,0,0,1));
 		for(Robot r:robots) {
 			AffineTransform at = new AffineTransform();
 			if(r==robot) {
@@ -161,22 +161,55 @@ class Surface extends JPanel implements MouseListener, MouseMotionListener, KeyL
 			}
 			Node robotFinish = r.getFinish();
 			g2d.drawOval((int) robotFinish.getX() - 5, (int) robotFinish.getY() - 5, 10, 10);
-			at.translate(robotFinish.getX(), robotFinish.getY() - 5);
-			at.rotate((-1) * robotFinish.getDirection(), 0, finishDirectionImage.getHeight(null) / 2);
-			g2d.drawImage(finishDirectionImage, at, null);
+			g2d.drawImage(rotate(finishDirectionImage,
+							(-1)*robotFinish.getDirection()),
+					(int)robotFinish.getX()-finishDirectionImage.getWidth(null)/2,
+					(int)robotFinish.getY()-finishDirectionImage.getWidth(null)/2,
+					null);
 
-			at = new AffineTransform();
 			if(r!=robot) {
-				at.translate((int) r.getX() - robotImage.getWidth(null) / 2, (int) r.getY() - robotImage.getHeight(null) / 2);
-				at.rotate((-1) * r.getAzimuth(), robotImage.getWidth(null) / 2, robotImage.getHeight(null) / 2);
-				g2d.drawImage(robotImage, at, null);
+				g2d.drawImage(rotate(robotImage, (-1) * r.getAzimuth()),
+						(int)r.getX()- robotImage.getWidth(null) / 2,
+						(int)r.getY()- robotImage.getHeight(null) / 2,
+						null);
 			} else {
-				at.translate((int) r.getX() - robotImageSelected.getWidth(null) / 2, (int) r.getY() - robotImageSelected.getHeight(null) / 2);
-				at.rotate((-1) * r.getAzimuth(), robotImageSelected.getWidth(null) / 2, robotImageSelected.getHeight(null) / 2);
-				g2d.drawImage(robotImageSelected, at, null);
+				g2d.drawImage(rotate(robotImageSelected,
+								(-1) * r.getAzimuth()),
+						(int)r.getX()- robotImage.getHeight(null) / 2,
+						(int)r.getY()- robotImage.getHeight(null) / 2,
+						null);
 			}
 		}
-	}	
+	}
+
+	private static Image rotate(Image image, double radians) {
+		int width = image.getWidth(null);
+		int height = image.getHeight(null);
+		int size = Math.max(width, height);
+		BufferedImage temp = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2 = temp.createGraphics();
+		g2.rotate(radians, size / 2, size / 2);
+		g2.setBackground(new Color(1, 0, 0, 1));
+		g2.drawImage(image, 0, 0, null);
+		g2.dispose();
+		return temp;
+	}
+
+	private static Image othersRotate(Image image, double radians, int xCenter, int yCenter) {
+		int width = image.getWidth(null)*2;
+		int height = image.getHeight(null)*2;
+		int size=Math.max(width, height);
+		//BufferedImage temp = new BufferedImage(height, width, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage temp = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2 = temp.createGraphics();
+		//g2.rotate(radians, height / 2, height / 2);
+		g2.rotate(radians, xCenter, yCenter);
+		g2.setBackground(new Color(1, 0, 0, 1));
+		g2.drawImage(image, 0, 0, null);
+		g2.dispose();
+		return temp;
+	}
+
 	// ������� ���������� ��������� �����
 	public void refreshScreen() {
 		if(robot.getMap().getImage()!=null)

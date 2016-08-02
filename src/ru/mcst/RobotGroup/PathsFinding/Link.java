@@ -31,7 +31,9 @@ class Link {
 		double length=segments[0].getLength()+segments[1].getLength()+segments[2].getLength();
 		int i=0;
 		double[] position=new double[3];
-		int step=robotSize/6;		
+		//int step=robotSize/6;
+		//int step=robotSize/10;
+		int step=1;
 		if(step==0) step=1;
 		
 		Segment segment=segments[i];
@@ -80,16 +82,27 @@ class Link {
 	public final static int getPointWeight(int xCenter, int yCenter, double azimuth,
 			int robotSize, byte[][] passabilityArray) {
 		if (passabilityArray == null) return 255;
-		robotSize /= 2;
-		int dx = robotSize - 2, dy = dx - robotSize / 3;
-		int x[] = { dx, -dx, -dx, dx, 0, 0 };
-		int y[] = { dy, dy, -dy, -dy, -dy, dy };
+		//robotSize /= 2;
+		//int dx = robotSize - 2, dy = dx - robotSize / 3;
+		//int x[] = { dx, -dx, -dx, dx, 0, 0 };
+		//int y[] = { dy, dy, -dy, -dy, -dy, dy };
+		int dx = robotSize/2;// - 2;
+		int dy = (int)Math.round(((double)robotSize*0.66)/4);
+		//int x[] = { dx, dx, dx, dx, dx, dx, dx, dx, dx};
+		//int y[] = { 4*dy, 3*dy, 2*dy, 1*dy, 0*dy, -1*dy, -2*dy, -3*dy, -4*dy,};
+
+//		int x[] = { dx, dx, dx, dx, dx};
+//		int y[] = { 2*dy, 1*dy, 0*dy, -1*dy, -2*dy};
+
+		int x[] = { dx, dx, dx, dx, dx, -dx, -dx};
+		int y[] = { 2*dy, 1*dy, 0*dy, -1*dy, -2*dy, 2*dy, -2*dy};
+
 		int weight = 0;
 		int h = passabilityArray[0].length;
 		double cos = Math.cos(azimuth), sin = Math.sin(azimuth);
 
 		// rotating and checking
-		for (int i = 0; i < 6; ++i) {
+		for (int i = 0; i < x.length; ++i) {
 			dx = x[i]; dy = y[i];
 			int xi = xCenter + (int) (cos * dx + sin * dy);
 			int yi = yCenter + (int) (cos * dy - sin * dx);
@@ -112,7 +125,6 @@ class Link {
 		double length=segments[0].getLength()+segments[1].getLength()+segments[2].getLength();
 		int i=0;
 		double[] position=new double[3];
-		//int step=robotSize/6;
 		int step=robotSize/8;
 		if(step==0) step=1;
 

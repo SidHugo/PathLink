@@ -6,16 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 
 class Node {
-	// координата узла
 	private double x;
 	private double y;
-	// список соседей узла
 	private List<Link> links=new ArrayList<Link>();
-	// коэффициенты для алгоритма поиска пути
-	//private double F, H, G;
-	// родитель узла (для построения найденного пути)
-	//private Node parent;
-	// пометка, что узел создал робот
 	private boolean isRobotMade;
 	// RADIANS
 	private double direction=0;
@@ -23,20 +16,12 @@ class Node {
 	public Node() {
         x=-1000;
 		y=-1000;
-//		F=0;
-//        H=0;
-//        G=0;
-//        parent=null;
         isRobotMade=false;
 	}
 	public Node(double x, double y, double direction) {
         this.x=x;
         this.y=y;
         this.direction=direction;
-//		F=0;
-//        H=0;
-//        G=0;
-//        parent=null;
         isRobotMade=false;
 	}
 	// возвращает true, когда узел n является соседом данного узла
@@ -91,14 +76,12 @@ class Node {
 		
 		seg0.setOriginX(x-radius*Math.cos(seg0.getStartAngle()));
 		// changed sign, because of screen coordinates
-		//seg0.setOriginY((double)coordinate.y-radius*Math.sin(seg0.getStartAngle()));
 		seg0.setOriginY(y+radius*Math.sin(seg0.getStartAngle()));
 		
 		double radStopB=(isClockwiseB? Segment.CapRadian(n.direction+Segment.halfPI) : Segment.CapRadian(n.direction-Segment.halfPI));
 		
 		seg2.setOriginX((double)n.getX()-radius*Math.cos(radStopB));
 		// changed sign, because of screen coordinates
-		// seg2.setOriginY((double)n.getY()-radius*Math.sin(radStopB));
 		seg2.setOriginY((double)n.getY()+radius*Math.sin(radStopB));
 		
 		// may be for some optimization
@@ -125,7 +108,6 @@ class Node {
 		    seg1.setIsStraightLine(true);
 		    seg1.setOriginX(originX0 + radius* Math.cos(radStopA));
 		    // changed sign, because of screen coordinates
-		    //seg1.setOriginY(seg0.getOriginY() + radius* Math.sin(radStopA));
 		    seg1.setOriginY(originY0 - radius* Math.sin(radStopA));
 		    seg1.setStartAngle(isClockwiseA? Segment.CapRadian(radStopA - Segment.halfPI) : Segment.CapRadian(radStopA + Segment.halfPI)); 
 		    seg1.setRadiansTotal(0);
@@ -142,7 +124,6 @@ class Node {
 			seg1.setIsStraightLine(true);
 			seg1.setOriginX(originX0 + radius* Math.cos(radStopB));
 			// changed sign, because of screen coordinates
-			//seg1.setOriginY(seg0.getOriginY() + radius* Math.sin(radStopA));
 			seg1.setOriginY(originY0 - radius* Math.sin(radStopB));
 			seg1.setStartAngle(isClockwiseA? Segment.CapRadian(radStopB - Segment.halfPI) : Segment.CapRadian(radStopB + Segment.halfPI)); 
 			seg1.setRadiansTotal(0);
@@ -155,7 +136,6 @@ class Node {
 			   boolean isClockwiseA, boolean isClockwiseB, double radius, Segment line) {
 		double dx=originXB-originXA;
 		// 	changed sign, because of screen coordinates
-		// double dy=originYB-originYA;
 		double dy=originYA-originYB;
 		double angleOrigin, angleFinal;
 		
@@ -176,11 +156,9 @@ class Node {
 			angleFinal=Segment.CapRadian(isClockwiseA? angleOrigin+angleRight : angleOrigin-angleRight);
 			double xNew=originXA+2*radius*Math.cos(angleFinal);
 			// 	changed sign, because of screen coordinates
-			//double yNew=originYA+2*radius*Math.sin(angleFinal);
 			double yNew=originYA-2*radius*Math.sin(angleFinal);
 			dx=originXB-xNew;
 			// 	changed sign, because of screen coordinates
-			// dy=originYB-yNew;
 			dy=yNew-originYB;
 			line.setLength(Math.sqrt(dx*dx+dy*dy));
 			
@@ -196,61 +174,6 @@ class Node {
     public double getY() {return y;}
     public void setX(double x) {this.x=x;}
     public void setY(double y) {this.y=y;}
-//    public void setG(double G) {this.G=G; F=G+H;}
-//    public double getF() {return F;}
-//    public double getH() {return H;}
-//    public double getG() {return G;}
-//    public void calculateH(Node n, double robotRadius, byte[][] passabilityArray) {
-//    	int weight;
-//    	if(passabilityArray==null)
-//    		weight=0;
-//    	else {
-//	    	if(0<=n.getX() && n.getX()<passabilityArray.length &&
-//	    	    	   0<=n.getY() && n.getY()<passabilityArray[0].length) {
-//	    		weight=(127-passabilityArray[(int)n.getX()][(int)n.getY()]+127-passabilityArray[(int)x][(int)y])/2;
-//	    	} else {
-//	    		weight=254;
-//	    	}
-//    	}
-//    	Segment[][] s=new Segment[4][3];
-//		double minLength=-1, length=-1;
-//		int minIndex=-1;
-//		for(int i=0; i<4; ++i)
-//		{
-//			boolean isClockwise1=(i<2);
-//			boolean isClockwise2=(i==1 || i==3);
-//			if((s[i]=computeSegments(s[i], n, isClockwise1, isClockwise2, robotRadius, -1, /*passabilityMap,*/ passabilityArray))!=null) {
-//				length=s[i][0].getLength()+s[i][1].getLength()+s[i][2].getLength();
-//			} else {
-//				length=-1;
-//			}
-//			if(length!=-1 && (minLength==-1 || minLength>length)) {
-//				minIndex=i;
-//				minLength=length;
-//			}
-//		}
-//		if(minIndex==-1)
-//			H=Double.MAX_VALUE;
-//		if(s[minIndex]!=null)
-//		{
-//			H=(s[minIndex][0].getLength()+s[minIndex][1].getLength()+s[minIndex][2].getLength())*(weight+1);
-//			// turning penalty
-//			H+=(s[minIndex][0].getRadiansTotal()+s[minIndex][2].getRadiansTotal())*(weight+1);
-//		}
-//		F=G+H;
-//    }
-//    public static double calculateG(double distanceToParent, int linkWeight, double radiansTotal, double parentG) {
-//    	return distanceToParent*(double)(linkWeight+1)+parentG+radiansTotal*(double)(linkWeight+1);
-//    }
-//    public void setParent(Node parent, double distanceToParent, int linkWeight, double linkRadiansTotal) {
-//		this.parent=parent;
-//		G=calculateG(distanceToParent, linkWeight, linkRadiansTotal, parent.getG());
-//		F=G+H;
-//	}
-//    public Node getParent()
-//	{
-//		return parent;
-//	}
 	public List<Link> getLinks() {return links;}
 	public boolean removeNeighbor(Node n) {synchronized (links) {
 			for(Iterator<Link> it=links.iterator(); it.hasNext();) {
@@ -262,13 +185,6 @@ class Node {
 		}
 		return true;
 	}
-	// очистка всех параметров для алгоритма поиска пути
-//	public void clear() {
-//		parent=null;
-//		F=0;
-//		G=0;
-//		H=0;
-//	}
 	public void setIsRobotMade(boolean isRobotMade) {this.isRobotMade=isRobotMade;}
 	public boolean getIsRobotMade() {return isRobotMade;}
 	public double getDirection() {return direction;}
